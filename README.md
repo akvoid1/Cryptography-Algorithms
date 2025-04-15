@@ -1,83 +1,99 @@
- Cipher Suite in C
-
+Cipher Web App
 Overview
-This project is a comprehensive C program that implements a variety of classical cryptographic ciphers. It features a menu-driven interface allowing users to select from 14 different ciphers, input plaintext, and provide necessary parameters (e.g., keys, shifts) to encrypt the text. The encrypted result (ciphertext) is then displayed.
-The implemented ciphers include both substitution (single and multiple) and transposition types, covering:
-- Single substitution: Atbash, Caesar, Affine
-- Multiple substitution: Vigenere, Gronsfeld, Beaufort, Auto Key, Running Key, Hill
-- Transposition: Rail Fence, Route, Columnar, Double Transpositional, Myszkowski
-
- Compilation
-To compile the program, use a C compiler such as `gcc`. Run the following command in the directory containing the source file (e.g., `cipher_suite.c`):
-
-bash
-gcc -o cipher_suite cipher_suite.c
-
-
-This generates an executable named `cipher_suite`.
-
- Usage
-1. Run the program:
-   bash
-   ./cipher_suite
-   
-2. A menu will display the available ciphers numbered 1-14, with 0 to exit.
-3. Enter your choice (0-14).
-4. Provide the plaintext when prompted.
-5. Depending on the cipher, enter additional parameters (e.g., shift value, key, matrix values).
-6. The program will output the encrypted ciphertext.
-7. Repeat or exit by selecting 0.
-
-Example
-
-Cipher Menu 
-1. Atbash Cipher
-2. Caesar Cipher
-
-Enter your choice (1-15, 0 to exit): 2
-Enter plaintext: HELLO WORLD
-Enter shift: 3
-Ciphertext: KHOOR ZRUOG
-
-
- Implemented Ciphers
-1. Atbash Cipher: Reverses the alphabet (A→Z, B→Y, etc.).
-2. Caesar Cipher: Shifts each letter by a fixed number (mod 26).
-3. Affine Cipher: Uses a linear transformation (ax + b mod 26).
-4. Vigenere Cipher: Polyalphabetic substitution with a repeating keyword.
-5. Gronsfeld Cipher: Like Vigenere but uses a numeric key.
-6. Beaufort Cipher: Subtracts plaintext from key (mod 26).
-7. Auto Key Cipher: Extends the key with the plaintext itself.
-8. Running Key Cipher: Uses a long key (e.g., book text) for substitution.
-9. Hill Cipher: Polygraphic substitution using a 2x2 matrix.
-10.Rail Fence Cipher: Transposition by writing text in a zigzag pattern.
-11.Route Cipher: Rearranges text in a grid, read column-wise.
-12.Columnar Cipher: Writes text in a grid and reads by key-ordered columns.
-13.Double Transpositional Cipher: Applies columnar transposition twice with two keys.
-14.Myszkowski Cipher: Columnar transposition with a key, reading by alphabetical order.
-
+The Cipher Web App is a single-page web application designed for encrypting and decrypting text using a variety of classical cipher algorithms. It features a modern, responsive interface with a gradient background, custom color palette, and user-friendly controls. Users can select a cipher, choose between encryption and decryption, input text, provide cipher-specific parameters, and view the output. Additional features include copying the output to the clipboard and clearing all inputs.
 Features
-- enu-Driven: Simple interface to select ciphers.
-- Flexible Input: Handles both uppercase and lowercase letters; preserves non-alphabetic characters where applicable.
-- In-Place Encryption: Modifies the input string directly to produce ciphertext.
+
+Supported Ciphers: Atbash, Caesar, Affine, Vigenere, Gronsfeld, Beaufort, Auto Key, Running Key, Hill, Rail Fence, Route, Columnar, Double Transpositional, and Myszkowski.
+Encryption and Decryption: Toggle between encrypt and decrypt operations using radio buttons.
+Dynamic Parameters: Input fields for cipher-specific parameters (e.g., shift for Caesar, matrix for Hill) appear dynamically based on the selected cipher.
+Enhanced UI: Features a gradient background, custom Tailwind CSS colors, and a two-column layout for desktop screens.
+Additional Functionality: Buttons to copy output to the clipboard and clear all inputs.
+Responsive Design: Optimized for both mobile and desktop devices using Tailwind CSS.
+Client-Side Processing: All computations are performed in the browser using JavaScript, requiring no server.
+
+File Structure
+
+index.html: The main file containing HTML structure, JavaScript logic for ciphers, and Tailwind CSS integration with a custom theme.
+
+Prerequisites
+
+A modern web browser (e.g., Chrome, Firefox, Safari, Edge).
+No server or additional software is required, as the app runs entirely in the browser.
+
+Installation
+
+Clone or Download:
+Clone this repository or download the index.html file.
+
+
+Open the App:
+Open index.html in a web browser by double-clicking the file or dragging it into the browser.
+
+
+
+Usage
+
+Select a Cipher:
+Choose a cipher from the dropdown menu (e.g., "Caesar Cipher").
+
+
+Choose Operation:
+Select "Encrypt" or "Decrypt" using the radio buttons.
+
+
+Enter Text:
+Input the text to process in the "Input Text" textarea.
+
+
+Provide Parameters:
+Fill in the cipher-specific parameters that appear (e.g., "Shift" for Caesar, "Key" for Vigenere).
+
+
+Process:
+Click the "Process" button to compute the result.
+
+
+View Output:
+The encrypted or decrypted text appears in the readonly "Output" textarea.
+
+
+Additional Actions:
+Click "Copy Output" to copy the result to the clipboard.
+Click "Clear All" to reset the input, output, and parameter fields.
+
+
+
+Notes
+
+Input Validation: Basic validation ensures numeric inputs for shifts and non-empty keys. Invalid inputs trigger alerts.
+Hill Cipher: Decryption requires a matrix with a modular inverse modulo 26; otherwise, an error is displayed.
+Text Handling: Non-alphabetic characters are preserved in most ciphers, except where specific handling is required (e.g., Hill Cipher processes letter pairs).
+Performance: Suitable for small to medium-sized texts. Large inputs may slow down processing due to client-side computation.
+
+Technologies Used
+
+HTML: Defines the structure of the web page.
+JavaScript: Implements cipher algorithms, dynamic UI updates, and clipboard functionality.
+Tailwind CSS: Provides styling via CDN with a custom color palette (primary shades).
 
 Limitations
-- No Decryption: Only encryption is implemented.
-- Basic Error Handling: Minimal validation for inputs (e.g., Affine's 'a' must be coprime with 26, but this isn't checked).
-- Hill Cipher: Simplified to a 2x2 matrix; requires even-length text.
-- Padding: Transposition ciphers pad with spaces if needed, which may affect output.
-- Key Length: Some ciphers assume keys are shorter than plaintext; longer keys are truncated or repeated.
 
-Potential Improvements
-- Add decryption functions for each cipher.
-- Implement robust input validation (e.g., matrix invertibility for Hill, valid shifts).
-- Support file input/output for larger texts.
-- Enhance Hill Cipher with variable matrix sizes.
-- Optimize memory usage for transposition ciphers with large inputs.
+No server-side storage or session persistence; all data is processed in-memory.
+Some ciphers (e.g., Hill, Route) may produce unexpected results with certain inputs (e.g., odd-length text for Hill, insufficient grid size for Route).
+Error handling is basic; users are alerted for invalid inputs but may need to adjust parameters manually.
+The clipboard API (document.execCommand('copy')) is used, which may have compatibility issues in some environments.
 
-Requirements
-- C compiler (e.g., `gcc`)
-- Standard C libraries (`stdio.h`, `string.h`, `ctype.h`, `stdlib.h`)
+Future Improvements
 
+Replace document.execCommand('copy') with the modern Clipboard API for better compatibility.
+Add support for saving or exporting results.
+Include visual diagrams for ciphers like Rail Fence or Route.
+Enhance error messages with detailed guidance.
+Optimize performance for larger inputs.
 
+License
+This project is open-source and available under the MIT License.
+Contact
+For questions or contributions, please open an issue or submit a pull request on the repository.
 
+Built as a standalone web application for educational purposes.
