@@ -1,392 +1,676 @@
-function isAlpha(c) {
-    return /[a-zA-Z]/.test(c);
-}
-
-function mod(n, m) {
-    return ((n % m) + m) % m;
-}
-
-function modInverse(a, m) {
-    a = mod(a, m);
-    for (let x = 1; x < m; x++)
-        if ((a * x) % m === 1)
-            return x;
-    return -1;
-}
-
-function atbashCipher(text, decrypt) {
-    let result = '';
-    for (let c of text) {
-        if (isAlpha(c)) {
-            let isUpper = c === c.toUpperCase();
-            let base = isUpper ? 'A'.charCodeAt(0) : 'a'.charCodeAt(0);
-            c = String.fromCharCode(base + (25 - (c.charCodeAt(0) - base)));
-            result += c;
-        } else {
-            result += c;
-        }
-    }
-    return result;
-}
-
-function caesarCipher(text, shift, decrypt) {
-    shift = decrypt ? -shift : shift;
-    shift = mod(shift, 26);
-    let result = '';
-    for (let c of text) {
-        if (isAlpha(c)) {
-            let isUpper = c === c.toUpperCase();
-            let base = isUpper ? 'A'.charCodeAt(0) : 'a'.charCodeAt(0);
-            c = String.fromCharCode(base + mod(c.charCodeAt(0) - base + shift, 26));
-            result += c;
-        } else {
-            result += c;
-        }
-    }
-    return result;
-}
-
-function affineCipher(text, a, b, decrypt) {
-    let result = '';
-    if (decrypt) {
-        let a_inv = modInverse(a, 26);
-        if (a_inv === -1) {
-            alert('Invalid key: a has no modular inverse');
-            return '';
-        }
-        for (let c of text) {
-            if (isAlpha(c)) {
-                let isUpper = c === c.toUpperCase();
-                let base = isUpper ? 'A'.charCodeAt(0) : 'a'.charCodeAt(0);
-                let y = c.charCodeAt(0) - base;
-                let x = mod(a_inv * (y - b), 26);
-                c = String.fromCharCode(base + x);
-                result += c;
-            } else {
-                result += c;
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cipher Web App</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            50: '#f0f9ff',
+                            100: '#e0f2fe',
+                            200: '#bae6fd',
+                            300: '#7dd3fc',
+                            400: '#38bdf8',
+                            500: '#0ea5e9',
+                            600: '#0284c7',
+                            700: '#0369a1',
+                            800: '#075985',
+                            900: '#0c4a6e',
+                            950: '#082f49',
+                        },
+                    }
+                }
             }
         }
-    } else {
-        for (let c of text) {
-            if (isAlpha(c)) {
-                let isUpper = c === c.toUpperCase();
-                let base = isUpper ? 'A'.charCodeAt(0) : 'a'.charCodeAt(0);
-                let x = c.charCodeAt(0) - base;
-                let y = mod(a * x + b, 26);
-                c = String.fromCharCode(base + y);
-                result += c;
-            } else {
-                result += c;
+    </script>
+</head>
+<body class="bg-gradient-to-br from-slate-50 to-slate-100 min-h-screen flex items-center justify-center p-4 font-sans">
+    <div class="bg-white rounded-xl shadow-xl w-full max-w-3xl overflow-hidden">
+        <!-- Header -->
+        <div class="bg-primary-600 p-6 text-white">
+            <h1 class="text-3xl font-bold text-center">Cipher Web App</h1>
+            <p class="text-center text-primary-100 mt-2">Encrypt and decrypt text using various cipher algorithms</p>
+        </div>
+        
+        <!-- Main Content -->
+        <div class="p-6 md:p-8">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Left Column: Input Controls -->
+                <div class="space-y-6">
+                    <div class="space-y-4">
+                        <div>
+                            <label for="cipher" class="block text-sm font-medium text-gray-700 mb-1">Select Cipher</label>
+                            <select id="cipher" class="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors">
+                                <option value="atbash">Atbash Cipher</option>
+                                <option value="caesar">Caesar Cipher</option>
+                                <option value="affine">Affine Cipher</option>
+                                <option value="vigenere">Vigenere Cipher</option>
+                                <option value="gronsfeld">Gronsfeld Cipher</option>
+                                <option value="beaufort">Beaufort Cipher</option>
+                                <option value="autokey">Auto Key Cipher</option>
+                                <option value="runningkey">Running Key Cipher</option>
+                                <option value="hill">Hill Cipher</option>
+                                <option value="railfence">Rail Fence Cipher</option>
+                                <option value="route">Route Cipher</option>
+                                <option value="columnar">Columnar Cipher</option>
+                                <option value="doubletrans">Double Transpositional Cipher</option>
+                                <option value="myszkowski">Myszkowski Cipher</option>
+                            </select>
+                        </div>
+                        
+                        <div>
+                            <span class="block text-sm font-medium text-gray-700 mb-1">Operation</span>
+                            <div class="flex space-x-4">
+                                <label class="inline-flex items-center">
+                                    <input type="radio" name="operation" value="encrypt" class="form-radio h-4 w-4 text-primary-600 focus:ring-primary-500" checked>
+                                    <span class="ml-2 text-gray-700">Encrypt</span>
+                                </label>
+                                <label class="inline-flex items-center">
+                                    <input type="radio" name="operation" value="decrypt" class="form-radio h-4 w-4 text-primary-600 focus:ring-primary-500">
+                                    <span class="ml-2 text-gray-700">Decrypt</span>
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <label for="inputText" class="block text-sm font-medium text-gray-700 mb-1">Input Text</label>
+                            <textarea id="inputText" rows="4" placeholder="Enter text to process..." class="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors"></textarea>
+                        </div>
+                        
+                        <div id="params" class="space-y-4"></div>
+                    </div>
+                </div>
+                
+                <!-- Right Column: Output and Process -->
+                <div class="space-y-6">
+                    <div>
+                        <label for="outputText" class="block text-sm font-medium text-gray-700 mb-1">Output</label>
+                        <textarea id="outputText" rows="4" class="w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-lg shadow-sm" readonly></textarea>
+                    </div>
+                    
+                    <div class="flex flex-col space-y-4">
+                        <button onclick="processCipher()" class="w-full bg-primary-600 hover:bg-primary-700 text-white font-medium py-3 px-4 rounded-lg shadow transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2">
+                            Process
+                        </button>
+                        
+                        <button onclick="copyToClipboard()" class="w-full bg-gray-100 hover:bg-gray-200 text-gray-800 font-medium py-2 px-4 rounded-lg shadow transition-colors focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2">
+                            Copy Output
+                        </button>
+                        
+                        <button onclick="clearAll()" class="w-full bg-white hover:bg-gray-50 text-gray-700 font-medium py-2 px-4 border border-gray-300 rounded-lg shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2">
+                            Clear All
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Footer -->
+        <div class="bg-gray-50 px-6 py-4 border-t border-gray-200">
+            <p class="text-center text-gray-500 text-sm">
+                Cipher Web App - Encrypt and decrypt text using various cipher algorithms
+            </p>
+        </div>
+    </div>
+
+    <script>
+        const cipherParams = {
+            caesar: [{id: 'shift', label: 'Shift', type: 'number', placeholder: 'e.g., 3'}],
+            affine: [
+                {id: 'a', label: 'a (coprime with 26)', type: 'number', placeholder: 'e.g., 5'},
+                {id: 'b', label: 'b', type: 'number', placeholder: 'e.g., 8'}
+            ],
+            vigenere: [{id: 'key', label: 'Key', type: 'text', placeholder: 'e.g., KEY'}],
+            gronsfeld: [{id: 'key', label: 'Numeric Key', type: 'text', placeholder: 'e.g., 1234'}],
+            beaufort: [{id: 'key', label: 'Key', type: 'text', placeholder: 'e.g., KEY'}],
+            autokey: [{id: 'key', label: 'Initial Key', type: 'text', placeholder: 'e.g., KEY'}],
+            runningkey: [{id: 'key', label: 'Long Key', type: 'text', placeholder: 'e.g., book text'}],
+            hill: [
+                {id: 'k00', label: 'Matrix [0,0]', type: 'number', placeholder: 'e.g., 1'},
+                {id: 'k01', label: 'Matrix [0,1]', type: 'number', placeholder: 'e.g., 2'},
+                {id: 'k10', label: 'Matrix [1,0]', type: 'number', placeholder: 'e.g., 3'},
+                {id: 'k11', label: 'Matrix [1,1]', type: 'number', placeholder: 'e.g., 4'}
+            ],
+            railfence: [{id: 'rails', label: 'Number of Rails', type: 'number', placeholder: 'e.g., 3'}],
+            route: [
+                {id: 'rows', label: 'Rows', type: 'number', placeholder: 'e.g., 3'},
+                {id: 'cols', label: 'Columns', type: 'number', placeholder: 'e.g., 4'}
+            ],
+            columnar: [{id: 'key', label: 'Key', type: 'text', placeholder: 'e.g., KEY'}],
+            doubletrans: [
+                {id: 'key1', label: 'First Key', type: 'text', placeholder: 'e.g., KEY1'},
+                {id: 'key2', label: 'Second Key', type: 'text', placeholder: 'e.g., KEY2'}
+            ],
+            myszkowski: [{id: 'key', label: 'Key', type: 'text', placeholder: 'e.g., KEY'}]
+        };
+
+        document.getElementById('cipher').addEventListener('change', updateParams);
+        updateParams();
+
+        function updateParams() {
+            const cipher = document.getElementById('cipher').value;
+            const paramsDiv = document.getElementById('params');
+            paramsDiv.innerHTML = '';
+            if (cipherParams[cipher]) {
+                cipherParams[cipher].forEach(param => {
+                    const div = document.createElement('div');
+                    div.innerHTML = `
+                        <label for="${param.id}" class="block text-sm font-medium text-gray-700 mb-1">${param.label}</label>
+                        <input id="${param.id}" type="${param.type}" placeholder="${param.placeholder}"
+                               class="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors">
+                    `;
+                    paramsDiv.appendChild(div);
+                });
             }
         }
-    }
-    return result;
-}
 
-function vigenereCipher(text, key, decrypt) {
-    let result = '';
-    let j = 0;
-    key = key.toUpperCase();
-    for (let c of text) {
-        if (isAlpha(c)) {
-            let isUpper = c === c.toUpperCase();
-            let base = isUpper ? 'A'.charCodeAt(0) : 'a'.charCodeAt(0);
-            let k = key.charCodeAt(j % key.length) - 'A'.charCodeAt(0);
-            let shift = decrypt ? -k : k;
-            c = String.fromCharCode(base + mod(c.charCodeAt(0) - base + shift, 26));
-            j++;
-            result += c;
-        } else {
-            result += c;
-        }
-    }
-    return result;
-}
-
-function gronsfeldCipher(text, key, decrypt) {
-    let result = '';
-    let j = 0;
-    for (let c of text) {
-        if (isAlpha(c)) {
-            let isUpper = c === c.toUpperCase();
-            let base = isUpper ? 'A'.charCodeAt(0) : 'a'.charCodeAt(0);
-            let k = parseInt(key[j % key.length]);
-            let shift = decrypt ? -k : k;
-            c = String.fromCharCode(base + mod(c.charCodeAt(0) - base + shift, 26));
-            j++;
-            result += c;
-        } else {
-            result += c;
-        }
-    }
-    return result;
-}
-
-function beaufortCipher(text, key, decrypt) {
-    let result = '';
-    let j = 0;
-    key = key.toUpperCase();
-    for (let c of text) {
-        if (isAlpha(c)) {
-            let isUpper = c === c.toUpperCase();
-            let base = isUpper ? 'A'.charCodeAt(0) : 'a'.charCodeAt(0);
-            let k = key.charCodeAt(j % key.length) - 'A'.charCodeAt(0);
-            c = String.fromCharCode(base + mod(k - (c.charCodeAt(0) - base), 26));
-            j++;
-            result += c;
-        } else {
-            result += c;
-        }
-    }
-    return result;
-}
-
-function autoKeyCipher(text, key, decrypt) {
-    let result = '';
-    let fullKey = key;
-    let j = 0;
-    if (decrypt) {
-        let tempResult = '';
-        for (let c of text) {
-            if (isAlpha(c)) {
-                let isUpper = c === c.toUpperCase();
-                let base = isUpper ? 'A'.charCodeAt(0) : 'a'.charCodeAt(0);
-                let k = fullKey.charCodeAt(j) - 'A'.charCodeAt(0);
-                let p = mod(c.charCodeAt(0) - base - k, 26);
-                let newC = String.fromCharCode(base + p);
-                tempResult += newC;
-                fullKey += newC.toUpperCase();
-                j++;
-            } else {
-                tempResult += c;
+        function copyToClipboard() {
+            const outputText = document.getElementById('outputText');
+            if (outputText.value) {
+                outputText.select();
+                document.execCommand('copy');
+                alert('Output copied to clipboard!');
             }
         }
-        result = tempResult;
-    } else {
-        fullKey += text.toUpperCase();
-        for (let c of text) {
-            if (isAlpha(c)) {
-                let isUpper = c === c.toUpperCase();
-                let base = isUpper ? 'A'.charCodeAt(0) : 'a'.charCodeAt(0);
-                let k = fullKey.charCodeAt(j) - 'A'.charCodeAt(0);
-                c = String.fromCharCode(base + mod(c.charCodeAt(0) - base + k, 26));
-                j++;
-                result += c;
+
+        function clearAll() {
+            document.getElementById('inputText').value = '';
+            document.getElementById('outputText').value = '';
+            const paramsDiv = document.getElementById('params');
+            Array.from(paramsDiv.querySelectorAll('input')).forEach(input => {
+                input.value = '';
+            });
+        }
+
+        function processCipher() {
+            const cipher = document.getElementById('cipher').value;
+            const operation = document.querySelector('input[name="operation"]:checked').value;
+            const decrypt = operation === 'decrypt';
+            let text = document.getElementById('inputText').value;
+            let output;
+
+            if (!text) {
+                alert('Please enter input text');
+                return;
+            }
+
+            switch (cipher) {
+                case 'atbash':
+                    output = atbashCipher(text, decrypt);
+                    break;
+                case 'caesar':
+                    const shift = parseInt(document.getElementById('shift')?.value);
+                    if (isNaN(shift)) { alert('Please enter a valid shift'); return; }
+                    output = caesarCipher(text, shift, decrypt);
+                    break;
+                case 'affine':
+                    const a = parseInt(document.getElementById('a')?.value);
+                    const b = parseInt(document.getElementById('b')?.value);
+                    if (isNaN(a) || isNaN(b)) { alert('Please enter valid a and b'); return; }
+                    output = affineCipher(text, a, b, decrypt);
+                    break;
+                case 'vigenere':
+                    const vigenereKey = document.getElementById('key')?.value;
+                    if (!vigenereKey) { alert('Please enter a key'); return; }
+                    output = vigenereCipher(text, vigenereKey, decrypt);
+                    break;
+                case 'gronsfeld':
+                    const gronsfeldKey = document.getElementById('key')?.value;
+                    if (!gronsfeldKey || !/^\d+$/.test(gronsfeldKey)) { alert('Please enter a numeric key'); return; }
+                    output = gronsfeldCipher(text, gronsfeldKey, decrypt);
+                    break;
+                case 'beaufort':
+                    const beaufortKey = document.getElementById('key')?.value;
+                    if (!beaufortKey) { alert('Please enter a key'); return; }
+                    output = beaufortCipher(text, beaufortKey, decrypt);
+                    break;
+                case 'autokey':
+                    const autokeyKey = document.getElementById('key')?.value;
+                    if (!autokeyKey) { alert('Please enter a key'); return; }
+                    output = autoKeyCipher(text, autokeyKey, decrypt);
+                    break;
+                case 'runningkey':
+                    const runningkeyKey = document.getElementById('key')?.value;
+                    if (!runningkeyKey) { alert('Please enter a key'); return; }
+                    output = runningKeyCipher(text, runningkeyKey, decrypt);
+                    break;
+                case 'hill':
+                    const k00 = parseInt(document.getElementById('k00')?.value);
+                    const k01 = parseInt(document.getElementById('k01')?.value);
+                    const k10 = parseInt(document.getElementById('k10')?.value);
+                    const k11 = parseInt(document.getElementById('k11')?.value);
+                    if (isNaN(k00) || isNaN(k01) || isNaN(k10) || isNaN(k11)) { alert('Please enter valid matrix values'); return; }
+                    output = hillCipher(text, [[k00, k01], [k10, k11]], decrypt);
+                    break;
+                case 'railfence':
+                    const rails = parseInt(document.getElementById('rails')?.value);
+                    if (isNaN(rails) || rails < 2) { alert('Please enter a valid number of rails'); return; }
+                    output = railFenceCipher(text, rails, decrypt);
+                    break;
+                case 'route':
+                    const rows = parseInt(document.getElementById('rows')?.value);
+                    const cols = parseInt(document.getElementById('cols')?.value);
+                    if (isNaN(rows) || isNaN(cols) || rows < 1 || cols < 1) { alert('Please enter valid rows and columns'); return; }
+                    output = routeCipher(text, rows, cols, decrypt);
+                    break;
+                case 'columnar':
+                    const columnarKey = document.getElementById('key')?.value;
+                    if (!columnarKey) { alert('Please enter a key'); return; }
+                    output = columnarCipher(text, columnarKey, decrypt);
+                    break;
+                case 'doubletrans':
+                    const key1 = document.getElementById('key1')?.value;
+                    const key2 = document.getElementById('key2')?.value;
+                    if (!key1 || !key2) { alert('Please enter both keys'); return; }
+                    output = doubleTransCipher(text, key1, key2, decrypt);
+                    break;
+                case 'myszkowski':
+                    const myszkowskiKey = document.getElementById('key')?.value;
+                    if (!myszkowskiKey) { alert('Please enter a key'); return; }
+                    output = myszkowskiCipher(text, myszkowskiKey, decrypt);
+                    break;
+            }
+
+            document.getElementById('outputText').value = output || 'Error processing cipher';
+        }
+
+        function isAlpha(c) {
+            return /[a-zA-Z]/.test(c);
+        }
+
+        function mod(n, m) {
+            return ((n % m) + m) % m;
+        }
+
+        function modInverse(a, m) {
+            a = mod(a, m);
+            for (let x = 1; x < m; x++)
+                if ((a * x) % m === 1)
+                    return x;
+            return -1;
+        }
+
+        function atbashCipher(text, decrypt) {
+            let result = '';
+            for (let c of text) {
+                if (isAlpha(c)) {
+                    let isUpper = c === c.toUpperCase();
+                    let base = isUpper ? 'A'.charCodeAt(0) : 'a'.charCodeAt(0);
+                    c = String.fromCharCode(base + (25 - (c.charCodeAt(0) - base)));
+                    result += c;
+                } else {
+                    result += c;
+                }
+            }
+            return result;
+        }
+
+        function caesarCipher(text, shift, decrypt) {
+            shift = decrypt ? -shift : shift;
+            shift = mod(shift, 26);
+            let result = '';
+            for (let c of text) {
+                if (isAlpha(c)) {
+                    let isUpper = c === c.toUpperCase();
+                    let base = isUpper ? 'A'.charCodeAt(0) : 'a'.charCodeAt(0);
+                    c = String.fromCharCode(base + mod(c.charCodeAt(0) - base + shift, 26));
+                    result += c;
+                } else {
+                    result += c;
+                }
+            }
+            return result;
+        }
+
+        function affineCipher(text, a, b, decrypt) {
+            let result = '';
+            if (decrypt) {
+                let a_inv = modInverse(a, 26);
+                if (a_inv === -1) {
+                    alert('Invalid key: a has no modular inverse');
+                    return '';
+                }
+                for (let c of text) {
+                    if (isAlpha(c)) {
+                        let isUpper = c === c.toUpperCase();
+                        let base = isUpper ? 'A'.charCodeAt(0) : 'a'.charCodeAt(0);
+                        let y = c.charCodeAt(0) - base;
+                        let x = mod(a_inv * (y - b), 26);
+                        c = String.fromCharCode(base + x);
+                        result += c;
+                    } else {
+                        result += c;
+                    }
+                }
             } else {
-                result += c;
+                for (let c of text) {
+                    if (isAlpha(c)) {
+                        let isUpper = c === c.toUpperCase();
+                        let base = isUpper ? 'A'.charCodeAt(0) : 'a'.charCodeAt(0);
+                        let x = c.charCodeAt(0) - base;
+                        let y = mod(a * x + b, 26);
+                        c = String.fromCharCode(base + y);
+                        result += c;
+                    } else {
+                        result += c;
+                    }
+                }
+            }
+            return result;
+        }
+
+        function vigenereCipher(text, key, decrypt) {
+            let result = '';
+            let j = 0;
+            key = key.toUpperCase();
+            for (let c of text) {
+                if (isAlpha(c)) {
+                    let isUpper = c === c.toUpperCase();
+                    let base = isUpper ? 'A'.charCodeAt(0) : 'a'.charCodeAt(0);
+                    let k = key.charCodeAt(j % key.length) - 'A'.charCodeAt(0);
+                    let shift = decrypt ? -k : k;
+                    c = String.fromCharCode(base + mod(c.charCodeAt(0) - base + shift, 26));
+                    j++;
+                    result += c;
+                } else {
+                    result += c;
+                }
+            }
+            return result;
+        }
+
+        function gronsfeldCipher(text, key, decrypt) {
+            let result = '';
+            let j = 0;
+            for (let c of text) {
+                if (isAlpha(c)) {
+                    let isUpper = c === c.toUpperCase();
+                    let base = isUpper ? 'A'.charCodeAt(0) : 'a'.charCodeAt(0);
+                    let k = parseInt(key[j % key.length]);
+                    let shift = decrypt ? -k : k;
+                    c = String.fromCharCode(base + mod(c.charCodeAt(0) - base + shift, 26));
+                    j++;
+                    result += c;
+                } else {
+                    result += c;
+                }
+            }
+            return result;
+        }
+
+        function beaufortCipher(text, key, decrypt) {
+            let result = '';
+            let j = 0;
+            key = key.toUpperCase();
+            for (let c of text) {
+                if (isAlpha(c)) {
+                    let isUpper = c === c.toUpperCase();
+                    let base = isUpper ? 'A'.charCodeAt(0) : 'a'.charCodeAt(0);
+                    let k = key.charCodeAt(j % key.length) - 'A'.charCodeAt(0);
+                    c = String.fromCharCode(base + mod(k - (c.charCodeAt(0) - base), 26));
+                    j++;
+                    result += c;
+                } else {
+                    result += c;
+                }
+            }
+            return result;
+        }
+
+        function autoKeyCipher(text, key, decrypt) {
+            let result = '';
+            let fullKey = key;
+            let j = 0;
+            if (decrypt) {
+                let tempResult = '';
+                for (let c of text) {
+                    if (isAlpha(c)) {
+                        let isUpper = c === c.toUpperCase();
+                        let base = isUpper ? 'A'.charCodeAt(0) : 'a'.charCodeAt(0);
+                        let k = fullKey.charCodeAt(j) - 'A'.charCodeAt(0);
+                        let p = mod(c.charCodeAt(0) - base - k, 26);
+                        let newC = String.fromCharCode(base + p);
+                        tempResult += newC;
+                        fullKey += newC.toUpperCase();
+                        j++;
+                    } else {
+                        tempResult += c;
+                    }
+                }
+                result = tempResult;
+            } else {
+                fullKey += text.toUpperCase();
+                for (let c of text) {
+                    if (isAlpha(c)) {
+                        let isUpper = c === c.toUpperCase();
+                        let base = isUpper ? 'A'.charCodeAt(0) : 'a'.charCodeAt(0);
+                        let k = fullKey.charCodeAt(j) - 'A'.charCodeAt(0);
+                        c = String.fromCharCode(base + mod(c.charCodeAt(0) - base + k, 26));
+                        j++;
+                        result += c;
+                    } else {
+                        result += c;
+                    }
+                }
+            }
+            return result;
+        }
+
+        function runningKeyCipher(text, key, decrypt) {
+            let result = '';
+            let j = 0;
+            key = key.toUpperCase();
+            for (let c of text) {
+                if (isAlpha(c)) {
+                    let isUpper = c === c.toUpperCase();
+                    let base = isUpper ? 'A'.charCodeAt(0) : 'a'.charCodeAt(0);
+                    let k = key.charCodeAt(j % key.length) - 'A'.charCodeAt(0);
+                    let shift = decrypt ? -k : k;
+                    c = String.fromCharCode(base + mod(c.charCodeAt(0) - base + shift, 26));
+                    j++;
+                    result += c;
+                } else {
+                    result += c;
+                }
+            }
+            return result;
+        }
+
+        function hillCipher(text, key, decrypt) {
+            let result = '';
+            let len = text.length;
+            if (decrypt) {
+                let det = mod(key[0][0] * key[1][1] - key[0][1] * key[1][0], 26);
+                let det_inv = modInverse(det, 26);
+                if (det_inv === -1) {
+                    alert('Invalid key: matrix has no modular inverse');
+                    return '';
+                }
+                let adj = [[key[1][1], -key[0][1]], [-key[1][0], key[0][0]]];
+                let inv = [[0, 0], [0, 0]];
+                for (let i = 0; i < 2; i++)
+                    for (let j = 0; j < 2; j++)
+                        inv[i][j] = mod((adj[i][j] % 26) * det_inv, 26);
+                for (let i = 0; i < len - 1; i += 2) {
+                    if (isAlpha(text[i]) && isAlpha(text[i + 1])) {
+                        let x = text[i].toUpperCase().charCodeAt(0) - 'A'.charCodeAt(0);
+                        let y = text[i + 1].toUpperCase().charCodeAt(0) - 'A'.charCodeAt(0);
+                        let a = mod(inv[0][0] * x + inv[0][1] * y, 26);
+                        let b = mod(inv[1][0] * x + inv[1][1] * y, 26);
+                        result += String.fromCharCode('A'.charCodeAt(0) + a);
+                        result += String.fromCharCode('A'.charCodeAt(0) + b);
+                        i++;
+                    } else {
+                        result += text[i];
+                    }
+                }
+                if (len % 2 === 1) result += text[len - 1];
+            } else {
+                for (let i = 0; i < len - 1; i += 2) {
+                    if (isAlpha(text[i]) && isAlpha(text[i + 1])) {
+                        let x = text[i].toUpperCase().charCodeAt(0) - 'A'.charCodeAt(0);
+                        let y = text[i + 1].toUpperCase().charCodeAt(0) - 'A'.charCodeAt(0);
+                        let a = mod(key[0][0] * x + key[0][1] * y, 26);
+                        let b = mod(key[1][0] * x + key[1][1] * y, 26);
+                        result += String.fromCharCode('A'.charCodeAt(0) + a);
+                        result += String.fromCharCode('A'.charCodeAt(0) + b);
+                        i++;
+                    } else {
+                        result += text[i];
+                    }
+                }
+                if (len % 2 === 1) result += text[len - 1];
+            }
+            return result;
+        }
+
+        function railFenceCipher(text, rails, decrypt) {
+            let len = text.length;
+            if (decrypt) {
+                let rail = Array(rails).fill().map(() => Array(len).fill(null));
+                let row = 0, dir = 1;
+                for (let i = 0; i < len; i++) {
+                    rail[row][i] = '*';
+                    row += dir;
+                    if (row === rails - 1 || row === 0) dir = -dir;
+                }
+                let k = 0;
+                for (let i = 0; i < rails; i++)
+                    for (let j = 0; j < len; j++)
+                        if (rail[i][j] === '*') rail[i][j] = text[k++];
+                let result = '';
+                row = 0; dir = 1;
+                for (let i = 0; i < len; i++) {
+                    if (rail[row][i]) result += rail[row][i];
+                    row += dir;
+                    if (row === rails - 1 || row === 0) dir = -dir;
+                }
+                return result;
+            } else {
+                let rail = Array(rails).fill().map(() => Array(len).fill(null));
+                let row = 0, dir = 1;
+                for (let i = 0; i < len; i++) {
+                    rail[row][i] = text[i];
+                    row += dir;
+                    if (row === rails - 1 || row === 0) dir = -dir;
+                }
+                let result = '';
+                for (let i = 0; i < rails; i++)
+                    for (let j = 0; j < len; j++)
+                        if (rail[i][j]) result += rail[i][j];
+                return result;
             }
         }
-    }
-    return result;
-}
 
-function runningKeyCipher(text, key, decrypt) {
-    let result = '';
-    let j = 0;
-    key = key.toUpperCase();
-    for (let c of text) {
-        if (isAlpha(c)) {
-            let isUpper = c === c.toUpperCase();
-            let base = isUpper ? 'A'.charCodeAt(0) : 'a'.charCodeAt(0);
-            let k = key.charCodeAt(j % key.length) - 'A'.charCodeAt(0);
-            let shift = decrypt ? -k : k;
-            c = String.fromCharCode(base + mod(c.charCodeAt(0) - base + shift, 26));
-            j++;
-            result += c;
-        } else {
-            result += c;
-        }
-    }
-    return result;
-}
-
-function hillCipher(text, key, decrypt) {
-    let result = '';
-    let len = text.length;
-    if (decrypt) {
-        let det = mod(key[0][0] * key[1][1] - key[0][1] * key[1][0], 26);
-        let det_inv = modInverse(det, 26);
-        if (det_inv === -1) {
-            alert('Invalid key: matrix has no modular inverse');
-            return '';
-        }
-        let adj = [[key[1][1], -key[0][1]], [-key[1][0], key[0][0]]];
-        let inv = [[0, 0], [0, 0]];
-        for (let i = 0; i < 2; i++)
-            for (let j = 0; j < 2; j++)
-                inv[i][j] = mod((adj[i][j] % 26) * det_inv, 26);
-        for (let i = 0; i < len - 1; i += 2) {
-            if (isAlpha(text[i]) && isAlpha(text[i + 1])) {
-                let x = text[i].toUpperCase().charCodeAt(0) - 'A'.charCodeAt(0);
-                let y = text[i + 1].toUpperCase().charCodeAt(0) - 'A'.charCodeAt(0);
-                let a = mod(inv[0][0] * x + inv[0][1] * y, 26);
-                let b = mod(inv[1][0] * x + inv[1][1] * y, 26);
-                result += String.fromCharCode('A'.charCodeAt(0) + a);
-                result += String.fromCharCode('A'.charCodeAt(0) + b);
-                i++;
-            } else {
-                result += text[i];
-            }
-        }
-        if (len % 2 === 1) result += text[len - 1];
-    } else {
-        for (let i = 0; i < len - 1; i += 2) {
-            if (isAlpha(text[i]) && isAlpha(text[i + 1])) {
-                let x = text[i].toUpperCase().charCodeAt(0) - 'A'.charCodeAt(0);
-                let y = text[i + 1].toUpperCase().charCodeAt(0) - 'A'.charCodeAt(0);
-                let a = mod(key[0][0] * x + key[0][1] * y, 26);
-                let b = mod(key[1][0] * x + key[1][1] * y, 26);
-                result += String.fromCharCode('A'.charCodeAt(0) + a);
-                result += String.fromCharCode('A'.charCodeAt(0) + b);
-                i++;
-            } else {
-                result += text[i];
-            }
-        }
-        if (len % 2 === 1) result += text[len - 1];
-    }
-    return result;
-}
-
-function railFenceCipher(text, rails, decrypt) {
-    let len = text.length;
-    if (decrypt) {
-        let rail = Array(rails).fill().map(() => Array(len).fill(null));
-        let row = 0, dir = 1;
-        for (let i = 0; i < len; i++) {
-            rail[row][i] = '*';
-            row += dir;
-            if (row === rails - 1 || row === 0) dir = -dir;
-        }
-        let k = 0;
-        for (let i = 0; i < rails; i++)
-            for (let j = 0; j < len; j++)
-                if (rail[i][j] === '*') rail[i][j] = text[k++];
-        let result = '';
-        row = 0; dir = 1;
-        for (let i = 0; i < len; i++) {
-            if (rail[row][i]) result += rail[row][i];
-            row += dir;
-            if (row === rails - 1 || row === 0) dir = -dir;
-        }
-        return result;
-    } else {
-        let rail = Array(rails).fill().map(() => Array(len).fill(null));
-        let row = 0, dir = 1;
-        for (let i = 0; i < len; i++) {
-            rail[row][i] = text[i];
-            row += dir;
-            if (row === rails - 1 || row === 0) dir = -dir;
-        }
-        let result = '';
-        for (let i = 0; i < rails; i++)
-            for (let j = 0; j < len; j++)
-                if (rail[i][j]) result += rail[i][j];
-        return result;
-    }
-}
-
-function routeCipher(text, rows, cols, decrypt) {
-    let len = text.length;
-    let grid = Array(rows).fill().map(() => Array(cols).fill(' '));
-    if (decrypt) {
-        let k = 0;
-        for (let j = 0; j < cols && k < len; j++)
-            for (let i = 0; i < rows && k < len; i++)
-                grid[i][j] = text[k++];
-        let result = '';
-        k = 0;
-        for (let i = 0; i < rows; i++)
-            for (let j = 0; j < cols; j++)
-                if (k < len) result += grid[i][j];
-        return result;
-    } else {
-        let k = 0;
-        for (let i = 0; i < rows && k < len; i++)
-            for (let j = 0; j < cols && k < len; j++)
-                grid[i][j] = text[k++];
-        let result = '';
-        for (let j = 0; j < cols; j++)
-            for (let i = 0; i < rows; i++)
-                if (grid[i][j] !== ' ') result += grid[i][j];
-        return result;
-    }
-}
-
-function columnarCipher(text, key, decrypt) {
-    let len = text.length;
-    let keyLen = key.length;
-    let rows = Math.ceil(len / keyLen);
-    let grid = Array(rows).fill().map(() => Array(keyLen).fill(' '));
-    if (decrypt) {
-        let order = Array(keyLen).fill().map((_, i) => i);
-        order.sort((a, b) => key[a].localeCompare(key[b]));
-        let k = 0;
-        for (let col of order)
-            for (let row = 0; row < rows && k < len; row++)
-                grid[row][col] = text[k++];
-        let result = '';
-        for (let i = 0; i < rows; i++)
-            for (let j = 0; j < keyLen; j++)
-                if (grid[i][j] !== ' ') result += grid[i][j];
-        return result;
-    } else {
-        let k = 0;
-        for (let i = 0; i < rows; i++)
-            for (let j = 0; j < keyLen && k < len; j++)
-                grid[i][j] = text[k++];
-        let result = '';
-        let order = Array(keyLen).fill().map((_, i) => i);
-        order.sort((a, b) => key[a].localeCompare(key[b]));
-        for (let col of order)
-            for (let row = 0; row < rows; row++)
-                if (grid[row][col] !== ' ') result += grid[row][col];
-        return result;
-    }
-}
-
-function doubleTransCipher(text, key1, key2, decrypt) {
-    if (decrypt) {
-        text = columnarCipher(text, key2, true);
-        return columnarCipher(text, key1, true);
-    } else {
-        text = columnarCipher(text, key1, false);
-        return columnarCipher(text, key2, false);
-    }
-}
-
-function myszkowskiCipher(text, key, decrypt) {
-    let len = text.length;
-    let keyLen = key.length;
-    let rows = Math.ceil(len / keyLen);
-    let grid = Array(rows).fill().map(() => Array(keyLen).fill(' '));
-    if (decrypt) {
-        let k = 0;
-        for (let c = 'A'.charCodeAt(0); c <= 'Z'.charCodeAt(0); c = c + 1) {
-            let char = String.fromCharCode(c);
-            for (let j = 0; j < keyLen; j++)
-                if (key[j].toUpperCase() === char)
+        function routeCipher(text, rows, cols, decrypt) {
+            let len = text.length;
+            let grid = Array(rows).fill().map(() => Array(cols).fill(' '));
+            if (decrypt) {
+                let k = 0;
+                for (let j = 0; j < cols && k < len; j++)
                     for (let i = 0; i < rows && k < len; i++)
                         grid[i][j] = text[k++];
-        }
-        let result = '';
-        for (let i = 0; i < rows; i++)
-            for (let j = 0; j < keyLen; j++)
-                if (grid[i][j] !== ' ') result += grid[i][j];
-        return result;
-    } else {
-        let k = 0;
-        for (let i = 0; i < rows; i++)
-            for (let j = 0; j < keyLen && k < len; j++)
-                grid[i][j] = text[k++];
-        let result = '';
-        for (let c = 'A'.charCodeAt(0); c <= 'Z'.charCodeAt(0); c = c + 1) {
-            let char = String.fromCharCode(c);
-            for (let j = 0; j < keyLen; j++)
-                if (key[j].toUpperCase() === char)
+                let result = '';
+                k = 0;
+                for (let i = 0; i < rows; i++)
+                    for (let j = 0; j < cols; j++)
+                        if (k < len) result += grid[i][j];
+                return result;
+            } else {
+                let k = 0;
+                for (let i = 0; i < rows && k < len; i++)
+                    for (let j = 0; j < cols && k < len; j++)
+                        grid[i][j] = text[k++];
+                let result = '';
+                for (let j = 0; j < cols; j++)
                     for (let i = 0; i < rows; i++)
                         if (grid[i][j] !== ' ') result += grid[i][j];
+                return result;
+            }
         }
-        return result;
-    }
-}
+
+        function columnarCipher(text, key, decrypt) {
+            let len = text.length;
+            let keyLen = key.length;
+            let rows = Math.ceil(len / keyLen);
+            let grid = Array(rows).fill().map(() => Array(keyLen).fill(' '));
+            if (decrypt) {
+                let order = Array(keyLen).fill().map((_, i) => i);
+                order.sort((a, b) => key[a].localeCompare(key[b]));
+                let k = 0;
+                for (let col of order)
+                    for (let row = 0; row < rows && k < len; row++)
+                        grid[row][col] = text[k++];
+                let result = '';
+                for (let i = 0; i < rows; i++)
+                    for (let j = 0; j < keyLen; j++)
+                        if (grid[i][j] !== ' ') result += grid[i][j];
+                return result;
+            } else {
+                let k = 0;
+                for (let i = 0; i < rows; i++)
+                    for (let j = 0; j < keyLen && k < len; j++)
+                        grid[i][j] = text[k++];
+                let result = '';
+                let order = Array(keyLen).fill().map((_, i) => i);
+                order.sort((a, b) => key[a].localeCompare(key[b]));
+                for (let col of order)
+                    for (let row = 0; row < rows; row++)
+                        if (grid[row][col] !== ' ') result += grid[row][col];
+                return result;
+            }
+        }
+
+        function doubleTransCipher(text, key1, key2, decrypt) {
+            if (decrypt) {
+                text = columnarCipher(text, key2, true);
+                return columnarCipher(text, key1, true);
+            } else {
+                text = columnarCipher(text, key1, false);
+                return columnarCipher(text, key2, false);
+            }
+        }
+
+        function myszkowskiCipher(text, key, decrypt) {
+            let len = text.length;
+            let keyLen = key.length;
+            let rows = Math.ceil(len / keyLen);
+            let grid = Array(rows).fill().map(() => Array(keyLen).fill(' '));
+            if (decrypt) {
+                let k = 0;
+                for (let c = 'A'.charCodeAt(0); c <= 'Z'.charCodeAt(0); c = c + 1) {
+                    let char = String.fromCharCode(c);
+                    for (let j = 0; j < keyLen; j++)
+                        if (key[j].toUpperCase() === char)
+                            for (let i = 0; i < rows && k < len; i++)
+                                grid[i][j] = text[k++];
+                }
+                let result = '';
+                for (let i = 0; i < rows; i++)
+                    for (let j = 0; j < keyLen; j++)
+                        if (grid[i][j] !== ' ') result += grid[i][j];
+                return result;
+            } else {
+                let k = 0;
+                for (let i = 0; i < rows; i++)
+                    for (let j = 0; j < keyLen && k < len; j++)
+                        grid[i][j] = text[k++];
+                let result = '';
+                for (let c = 'A'.charCodeAt(0); c <= 'Z'.charCodeAt(0); c = c + 1) {
+                    let char = String.fromCharCode(c);
+                    for (let j = 0; j < keyLen; j++)
+                        if (key[j].toUpperCase() === char)
+                            for (let i = 0; i < rows; i++)
+                                if (grid[i][j] !== ' ') result += grid[i][j];
+                }
+                return result;
+            }
+        }
+    </script>
+</body>
+</html>
